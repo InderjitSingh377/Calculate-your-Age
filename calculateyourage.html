@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inder Age Calculator System</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Apply Inter font and a smooth background */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f9;
+        }
+        /* Style the date input to look consistent */
+        #date-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            /* Invert and color the picker icon for better visibility */
+            filter: invert(40%) sepia(80%) saturate(2000%) hue-rotate(230deg);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Calculator Container -->
+    <div class="container bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md transition-all duration-300">
+
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6 text-center tracking-tight">
+            Calculate Your Age
+        </h1>
+
+        <!-- Error Message Display (Hidden by default) -->
+        <div id="error-message" class="text-red-600 bg-red-100 p-3 rounded-lg mb-4 text-center font-medium hidden border border-red-300">
+            Please select a valid date of birth (must be in the past).
+        </div>
+
+        <!-- Inputs Wrapper -->
+        <div class="inputs-wrapper flex flex-col space-y-4">
+
+            <!-- Date Input -->
+            <input type="date" id="date-input" class="p-3 border-2 border-gray-300 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 focus:ring-opacity-50 transition duration-150 ease-in-out text-gray-700">
+
+            <!-- Calculate Button with onclick handler -->
+            <button onclick="ageCalculate()" class="bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition duration-200 ease-in-out shadow-lg transform active:scale-95 hover:shadow-xl">
+                Calculate Age
+            </button>
+        </div>
+
+        <!-- Outputs Wrapper (Results) -->
+        <div class="outputs-wrapper grid grid-cols-3 gap-3 mt-8 text-center">
+
+            <!-- Years Box -->
+            <div class="bg-indigo-50 p-4 rounded-xl shadow-inner border border-indigo-200">
+                <span id="years" class="text-4xl sm:text-5xl font-extrabold text-indigo-700 block transition-all duration-300"> - </span>
+                <p class="text-sm font-medium text-gray-500 mt-1">Years</p>
+            </div>
+
+            <!-- Months Box -->
+            <div class="bg-indigo-50 p-4 rounded-xl shadow-inner border border-indigo-200">
+                <span id="months" class="text-4xl sm:text-5xl font-extrabold text-indigo-700 block transition-all duration-300"> - </span>
+                <p class="text-sm font-medium text-gray-500 mt-1">Months</p>
+            </div>
+
+            <!-- Days Box -->
+            <div class="bg-indigo-50 p-4 rounded-xl shadow-inner border border-indigo-200">
+                <span id="days" class="text-4xl sm:text-5xl font-extrabold text-indigo-700 block transition-all duration-300"> - </span>
+                <p class="text-sm font-medium text-gray-500 mt-1">Days</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Javascript Logic (script.js contents embedded here) -->
+    <script>
+        /**
+         * Calculates the difference between a birth date and the current date in years, months, and days.
+         */
+        function ageCalculate() {
+            const dateInput = document.getElementById('date-input').value;
+            const errorDisplay = document.getElementById('error-message');
+            const yearDisplay = document.getElementById('years');
+            const monthDisplay = document.getElementById('months');
+            const dayDisplay = document.getElementById('days');
+
+            // --- 1. Validation ---
+            if (!dateInput) {
+                errorDisplay.textContent = 'Please select a date of birth.';
+                errorDisplay.classList.remove('hidden');
+                yearDisplay.textContent = '-';
+                monthDisplay.textContent = '-';
+                dayDisplay.textContent = '-';
+                return;
+            }
+
+            const birthDate = new Date(dateInput);
+            const today = new Date();
+
+            // Check for future date
+            if (birthDate > today) {
+                errorDisplay.textContent = 'Date of birth cannot be in the future.';
+                errorDisplay.classList.remove('hidden');
+                yearDisplay.textContent = '-';
+                monthDisplay.textContent = '-';
+                dayDisplay.textContent = '-';
+                return;
+            }
+
+            // Clear any previous error message
+            errorDisplay.classList.add('hidden');
+
+            // --- 2. Calculation ---
+
+            // Start with current date components
+            let currentYear = today.getFullYear();
+            let currentMonth = today.getMonth() + 1; // 1-12
+            let currentDay = today.getDate();
+
+            // Birth date components
+            let birthYear = birthDate.getFullYear();
+            let birthMonth = birthDate.getMonth() + 1; // 1-12
+            let birthDay = birthDate.getDate();
+
+            let calculatedYears = 0;
+            let calculatedMonths = 0;
+            let calculatedDays = 0;
+
+            // Calculate Years
+            calculatedYears = currentYear - birthYear;
+
+            // Adjust Months and Years
+            if (currentMonth < birthMonth) {
+                calculatedYears--;
+                calculatedMonths = 12 + currentMonth - birthMonth;
+            } else {
+                calculatedMonths = currentMonth - birthMonth;
+            }
+
+            // Adjust Days and Months
+            if (currentDay < birthDay) {
+                // Borrow a month
+                calculatedMonths--;
+
+                // Get the number of days in the *previous* month
+                // New Date(year, month, 0) returns the last day of the previous month
+                let daysInPreviousMonth = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+                calculatedDays = daysInPreviousMonth + currentDay - birthDay;
+
+                // Handle case where month becomes negative (e.g., if birthday is Dec 31st and today is Jan 1st)
+                if (calculatedMonths < 0) {
+                    calculatedMonths = 11; // 12 months - 1 = 11
+                    calculatedYears--;
+                }
+            } else {
+                calculatedDays = currentDay - birthDay;
+            }
+
+            // --- 3. Output Results ---
+            yearDisplay.textContent = calculatedYears;
+            monthDisplay.textContent = calculatedMonths;
+            dayDisplay.textContent = calculatedDays;
+        }
+    </script>
+
+</body>
+</html>
